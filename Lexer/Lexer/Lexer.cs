@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 
-namespace Compiler.Lexer
+namespace Compiler.Lexing
 {
 
     /// <summary>

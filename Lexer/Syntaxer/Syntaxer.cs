@@ -1,16 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
-
-namespace Compiler.Syntaxer
+namespace Compiler.Syntaxing
 {
     public class Syntaxer
     {
         public String MakeAnalyze(String input)
         {
-            //todo
-            return "";
+            tokens = new Stack<string>(input.Split('\n').Reverse());
+            
+            return prt_ast(parse());
         }
 
         public enum TokenType
@@ -189,32 +191,22 @@ namespace Compiler.Syntaxer
 
         }
 
+        private Stack<string> tokens;
+
+
         tok_s gettok()
         {
-            int len;
-            tok_s tok = null;
-            //todo
-            //string yytext = read_line(&len);
-            //yytext = rtrim(yytext, &len);
+            tok_s tok = new tok_s();
+            RegexOptions options = RegexOptions.None;
+            Regex regex = new Regex("[ ]{2,}", options);
 
-            //// [ ]*{lineno}[ ]+{colno}[ ]+token[ ]+optional
+            string[] token_parts = regex.Replace(tokens.Pop().Trim(), " ").Split();
 
-            //// get line and column
-            //tok.err_ln = atoi(strtok(yytext, " "));
-            //tok.err_col = atoi(strtok(NULL, " "));
+            tok.err_ln = Convert.ToInt32(token_parts[0]);
+            tok.err_col = Convert.ToInt32(token_parts[1]);
+            tok.tok = get_enum(token_parts[2]);
+            tok.text = token_parts.Length == 4 ? token_parts[3] : null;
 
-            //// get the token name
-            //char* name = strtok(NULL, " ");
-            //tok.tok = get_enum(name);
-
-            //// if there is extra data, get it
-            //char* p = name + strlen(name);
-            //if (p != &yytext[len])
-            //{
-            //    for (++p; isspace(*p); ++p)
-            //        ;
-            //    tok.text = strdup(p);
-            //}
             return tok;
         }
 
@@ -361,8 +353,8 @@ namespace Compiler.Syntaxer
                     expect("Lbrace", TokenType.tk_Rbrace);
                     break;
                 case TokenType.tk_EOI:
-                    break;
-                //default: error(tok.err_ln, tok.err_col, "expecting start of statement, found '%s'\n", atr[tok.tok].text);
+                    break;                   
+               // default(): error(tok.err_ln, tok.err_col, "expecting start of statement, found '%s'\n", atr[tok.tok].text);
             }
 
             return t;
@@ -376,7 +368,7 @@ namespace Compiler.Syntaxer
             do
             {
                 t = new Tree(NodeType.nd_Sequence, t, stmt());
-            } while (t != null && tok.tok != TokenType.tk_EOI);
+            } while (t != null && tok.tok != TokenType.tk_EOI && tokens.Count != 0);
 
             return t;
         }

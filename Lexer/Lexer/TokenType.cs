@@ -1,4 +1,4 @@
-﻿namespace Compiler.Lexer
+﻿namespace Compiler.Lexing
 {
     public enum TokenType
     {

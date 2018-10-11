@@ -1,5 +1,5 @@
 ﻿
-namespace Compiler.Lexer
+namespace Compiler.Lexing
 {
     /// <summary>
     /// Storage class for tokens
