@@ -1,4 +1,5 @@
-﻿using Compiler;
+﻿using Compiler.Lexing;
+using Compiler.Syntaxing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
