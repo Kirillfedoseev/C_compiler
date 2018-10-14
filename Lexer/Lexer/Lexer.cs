@@ -183,7 +183,6 @@ namespace Compiler.Lexing
             return sb.ToString();
         }
 
-
         
         /// <summary>
         /// Pattern matching using first & follow matching
@@ -257,7 +256,7 @@ namespace Compiler.Lexing
         /// Tokenise the input code 
         /// </summary>
         /// <returns>List of Tokens</returns>
-        private List<Token> Scan(string input)
+        public List<Token> Scan(string input)
         {
             _input = input;
             int pos = _position;

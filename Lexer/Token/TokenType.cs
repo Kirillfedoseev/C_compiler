@@ -1,4 +1,4 @@
-﻿namespace Compiler.Lexing
+﻿namespace Compiler
 {
     public enum TokenType
     {
@@ -10,6 +10,7 @@
         Op_bit_or,
         Op_bit_not,
         Include,
+
         Keyword_auto,
         Keyword_double,
         Keyword_int,
@@ -37,6 +38,7 @@
         Keyword_float,
         Keyword_short,
         Keyword_unsigned,
+
         Op_bit_xor,
         Op_bit_left_shift,
         Op_bit_right_shift,
@@ -48,12 +50,14 @@
         Op_bit_left_shift_assign,
         Op_bit_right_shift_assign,
         Op_struct_reference,
+
         LeftSquareBracket,
         RightSquareBracket,
         Op_bit_or_assign,
         Error,
         Keyword_union,
         Keyword_default,
+
         Op_pre_inc,
         Op_pre_dec,
         Op_suf_inc,

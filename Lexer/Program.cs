@@ -1,6 +1,7 @@
-﻿using System.IO;
-using Compiler.Lexing;
-using Compiler.Syntaxing;
+﻿using System;
+using System.IO;
+using Compiler.Units.SimpleUnits;
+using Newtonsoft.Json;
 
 namespace Compiler
 {
@@ -9,18 +10,25 @@ namespace Compiler
 
         static void Main(string[] args)
         {
-            string code = File.ReadAllText("in.txt");
+            //string code = File.ReadAllText("in.txt");
 
-            // strip windows line endings out
-            code = code.Replace("\r", "");
+            //// strip windows line endings out
+            //code = code.Replace("\r", "");
 
-            Lexer lexer = new Lexer();
-            string tokens = lexer.MakeAnalyze(code);
+            //Lexing.Lexer lexer = new Lexing.Lexer();
+            //List<Token> tokens = lexer.Scan(code);
 
-            Syntaxer syntaxer = new Syntaxer();
-            string result = syntaxer.MakeAnalyze(tokens);
+            //Syntaxer syntaxer = new Syntaxer();
+            //string result = syntaxer.MakeAnalyze(tokens);
 
-            File.WriteAllText("out.txt", result);
+
+            BinaryOpsUnit unit = new BinaryOpsUnit("*", new NumUnit("123"), new IdenUnit("a"));
+            var jset = new JsonSerializerSettings();
+            jset.Formatting = Formatting.Indented;
+            string s = JsonConvert.SerializeObject(unit, jset);
+
+            File.WriteAllText("out.txt", s);
+
         }
     }
 }

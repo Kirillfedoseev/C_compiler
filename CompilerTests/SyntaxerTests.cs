@@ -1,7 +1,9 @@
-﻿using Compiler.Lexing;
+﻿using Compiler;
+using Compiler.Lexing;
 using Compiler.Syntaxing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 
 namespace LexerTests
 {
@@ -9,13 +11,13 @@ namespace LexerTests
     class SyntaxerTests
     {
 
-        private Lexer _lexical;
+        private Compiler.Lexing.Lexer _lexical;
         private Syntaxer _syntaxer;
 
 
         public SyntaxerTests()
         {
-            _lexical = new Lexer();
+            _lexical = new Compiler.Lexing.Lexer();
             _syntaxer = new Syntaxer();
         }
 
@@ -37,7 +39,7 @@ namespace LexerTests
         {
             String in_ = ""; //исходный код
             String expected = ""; //предполагаемый ответ
-            String lexems = _lexical.MakeAnalyze(in_); //сначала исходный код делится на лексемы
+            List<Token> lexems = _lexical.Scan(in_); //сначала исходный код делится на лексемы
             String actual = _syntaxer.MakeAnalyze(lexems);//потом лексемы превращаются в program tree
             Assert.IsTrue(AreEqual(expected, actual));//проверка на совпадение
         }
@@ -79,7 +81,7 @@ namespace LexerTests
                 "    }\n" +
                 "  ]\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -89,7 +91,7 @@ namespace LexerTests
         {
             String in_ = "123.5";
             String expected = "{ type: \"num\", value: 123.5 }";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -98,8 +100,8 @@ namespace LexerTests
         public void StringTest()
         {
             String in_ = "\"Hello World!\"";
-            String expected = "{ type: \"char[]\", value: \"Hello World!\" }";
-            String lexems = _lexical.MakeAnalyze(in_);
+            String expected = "{ type: \"string\", value: \"Hello World!\" }";
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -111,7 +113,7 @@ namespace LexerTests
                 "false";
             String expected = "{ type: \"bool\", value: true }\n" +
                 "{ type: \"bool\", value: false }";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -121,7 +123,7 @@ namespace LexerTests
         {
             String in_ = "foo";
             String expected = "{ type: \"var\", value: \"foo\" }";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -136,7 +138,7 @@ namespace LexerTests
                 "  vars: [ \"x\" ],\n" +
                 "  body: { type: \"num\", value: 10 }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -153,7 +155,7 @@ namespace LexerTests
                 "    { \"type\": \"num\", \"value\": 1 }\n" +
                 "  ]\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -168,7 +170,7 @@ namespace LexerTests
                 "  \"then\": { \"type\": \"var\", \"value\": \"bar\" },\n" +
                 "  \"else\": { \"type\": \"var\", \"value\": \"baz\" }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -182,7 +184,7 @@ namespace LexerTests
                 "  \"cond\": { \"type\": \"var\", \"value\": \"foo\" },\n" +
                 "  \"then\": { \"type\": \"var\", \"value\": \"bar\" }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -199,7 +201,7 @@ namespace LexerTests
                 "  \"cond\": { \"type\": \"var\", \"value\": \"foo\" },\n" +
                 "  \"body\": { \"type\": \"var\", \"value\": \"bar\" }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -214,7 +216,7 @@ namespace LexerTests
                 "  \"left\": { \"type\": \"var\", \"value\": \"a\" },\n" +
                 "  \"right\": { \"type\": \"num\", \"value\": 10 }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -234,7 +236,7 @@ namespace LexerTests
                 "    \"right\": { \"type\": \"var\", \"value\": \"z\" }\n" +
                 "  }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -275,7 +277,7 @@ namespace LexerTests
                 "    }\n" +
                 "  ]\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -310,7 +312,7 @@ namespace LexerTests
                 "    \"right\": { \"type\": \"var\", \"value\": \"b\" }\n" +
                 "  }\n" +
                 "}";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -320,7 +322,7 @@ namespace LexerTests
         {
             String in_ = "#include <stdio.h>";
             String expected = "{ type: \"include\", value: stdio.h }";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }
@@ -330,17 +332,7 @@ namespace LexerTests
         {
             String in_ = "#include \"func.c\"";
             String expected = "{ type: \"include\", value: func.c }";
-            String lexems = _lexical.MakeAnalyze(in_);
-            String actual = _syntaxer.MakeAnalyze(lexems);
-            Assert.IsTrue(AreEqual(expected, actual));
-        }
-
-        [TestMethod]
-        public void Test()
-        {
-            String in_ = "";
-            String expected = "";
-            String lexems = _lexical.MakeAnalyze(in_);
+            List<Token> lexems = _lexical.Scan(in_);
             String actual = _syntaxer.MakeAnalyze(lexems);
             Assert.IsTrue(AreEqual(expected, actual));
         }

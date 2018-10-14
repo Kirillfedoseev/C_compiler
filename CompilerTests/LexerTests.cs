@@ -1,6 +1,6 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Compiler;
+using Compiler.Lexing;
 
 
 namespace LexerTests
@@ -10,12 +10,12 @@ namespace LexerTests
     {
 
 
-        private Lexer _lexical;
+        private Compiler.Lexing.Lexer _lexical;
 
         
         public LexerTests()
         {
-            _lexical = new Lexer();
+            _lexical = new Compiler.Lexing.Lexer();
         }
 
         public bool AreEqual(String expected, String actual)
