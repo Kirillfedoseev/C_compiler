@@ -1,13 +1,25 @@
 ﻿using Compiler.Units;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 
 namespace Compiler.Syntaxing
 {
+    [JsonObject]
+
     public class Tree
     {
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(Order = 1, PropertyName = "type")]
         public NodeType node_type;
+
+        [JsonProperty(Order = 2, PropertyName = "left")]
         public Tree left;
+
+        [JsonProperty(Order = 3, PropertyName = "right")]
         public Tree right;
+
+        [JsonProperty(Order = 4, PropertyName = "value")]
         public string value;
 
         //leaf

@@ -28,11 +28,11 @@ namespace Compiler.Syntaxing
         public string MakeAnalyze(List<Token> input)
         {
             input.Reverse();
-            Unit unit = ParseTokens(new Stack<Token>(input));
+            Tree tree = ParseTokens(new Stack<Token>(input));
 
             var jset = new JsonSerializerSettings();
             jset.Formatting = Formatting.Indented;
-            return JsonConvert.SerializeObject(unit, jset);
+            return JsonConvert.SerializeObject(tree, jset);
         }
 
         /// <summary>
@@ -40,71 +40,21 @@ namespace Compiler.Syntaxing
         /// </summary>
         /// <param name="tokens">input token, where head is first lexical token</param>
         /// <returns></returns>
-        private Unit ParseTokens(Stack<Token> tokens)
+        private Tree ParseTokens(Stack<Token> tokens)
         {
-            ProgramUnit tree = new ProgramUnit();
+            Tree tree = null;
             Tokens = tokens;
-
             do
             {
-                tree.Nested.Add(GetNextUnit());
-            } while (Tokens.Peek().Type != TokenType.End_of_input && tokens.Count != 0);
+                Current = tokens.Pop();
+                tree = new Tree(NodeType.Sequence, tree, Statement());
+            } while (tree != null && Current.Type != TokenType.End_of_input && tokens.Count != 0);
 
             Tokens = null;
             Current = null;
 
             return tree;
         }
-
-        private Unit GetNextUnit()
-        {
-            Unit buf;
-            
-            if(Tokens.Peek().Type == TokenType.Include) return new IncludeUnit(Tokens.Pop().Value);
-
-            if ((buf = IsNextFunction()) != null) return buf;
-            
-
-
-            return null;
-        }
-
-        private FunctionUnit IsNextFunction()
-        {
-            List<Token> tokens = new List<Token>(Tokens.ToArray());
-            FunctionUnit func = new FunctionUnit();
-
-            if (tokens[0].Type != TokenType.Keyword_int) return null;
-            func.Return = tokens[0].Type.ToString().Replace("Keyword_", "");
-
-            if (tokens[1].Type != TokenType.Identifier) return null;
-            func.Name = tokens[1].Value;
-
-            if (tokens[2].Type != TokenType.LeftParen) return null;
-            int i = 3;
-            while (tokens[i].Type != TokenType.RightParen)
-            {
-                string type;
-                string ids;
-                if (tokens[i].Type != TokenType.Keyword_int) return null;
-                type = tokens[i].Type.ToString().Replace("Keyword_", "");
-                i++;
-                if (tokens[i].Type != TokenType.Identifier) return null;
-                ids = tokens[i].Value;
-                i++;
-                if (tokens[i].Type != TokenType.RightParen) break;
-                if (tokens[i].Type != TokenType.Comma) return null;
-                i++;
-                func.Args.Add(new DecIdenUnit(type, ids));
-            }
-
-            return null;
-        }
-
-         
-       
-
-        
 
         /// <summary>
         /// Parse Expression

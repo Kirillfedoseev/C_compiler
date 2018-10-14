@@ -1,10 +1,9 @@
-﻿using Compiler;
-using Compiler.Syntaxing;
+﻿using Compiler.Syntaxing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 
-namespace LexerTests
+namespace Compiler.Tests
 {
     [TestClass]
     class SyntaxerTests

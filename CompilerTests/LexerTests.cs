@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Compiler.Lexing;
 
 
-namespace LexerTests
+namespace Compiler.Tests
 {
     [TestClass]
     public class LexerTests
