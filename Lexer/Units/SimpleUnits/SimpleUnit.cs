@@ -1,11 +1,8 @@
-﻿using Compiler.Syntaxer.Units;
-using Newtonsoft.Json;
-using System.Runtime.Serialization;
-
+﻿using Newtonsoft.Json;
 namespace Compiler.Units.SimpleUnits
 {
     [JsonObject]
-    abstract class SimpleUnit : Unit
+    public abstract class SimpleUnit : Unit
     {
 
         [JsonProperty(Order = 2, PropertyName = "value")]

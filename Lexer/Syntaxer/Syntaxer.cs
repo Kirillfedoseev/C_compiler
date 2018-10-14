@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using Compiler.Syntaxer.Units;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Compiler.Units;
+using Compiler.Units.SimpleUnits;
 using Newtonsoft.Json;
 
 namespace Compiler.Syntaxing
 {
-    public partial class Syntaxer
+    public class Syntaxer
     {
         
-
         /// <summary>
         /// Proccessing stack of tokens
         /// </summary>
@@ -28,9 +27,12 @@ namespace Compiler.Syntaxing
         /// <returns>AST tree in string</returns>
         public string MakeAnalyze(List<Token> input)
         {
-            Unit unit = ParseTokens(new Stack<Token>(input));            
-            string s = JsonConvert.SerializeObject(unit,new JsonSerializerSettings());
-            return s;
+            input.Reverse();
+            Unit unit = ParseTokens(new Stack<Token>(input));
+
+            var jset = new JsonSerializerSettings();
+            jset.Formatting = Formatting.Indented;
+            return JsonConvert.SerializeObject(unit, jset);
         }
 
         /// <summary>
@@ -40,20 +42,70 @@ namespace Compiler.Syntaxing
         /// <returns></returns>
         private Unit ParseTokens(Stack<Token> tokens)
         {
-            Unit tree = null;
+            ProgramUnit tree = new ProgramUnit();
             Tokens = tokens;
-            //Current = tokens.Pop();
-            //do   
-            //    tree = new Tree(NodeType.Sequence, tree, Statement());
-            //while (tree != null && Current.Type != TokenType.EOI && tokens.Count != 0);
+
+            do
+            {
+                tree.Nested.Add(GetNextUnit());
+            } while (Tokens.Peek().Type != TokenType.End_of_input && tokens.Count != 0);
 
             Tokens = null;
             Current = null;
 
             return tree;
         }
+
+        private Unit GetNextUnit()
+        {
+            Unit buf;
+            
+            if(Tokens.Peek().Type == TokenType.Include) return new IncludeUnit(Tokens.Pop().Value);
+
+            if ((buf = IsNextFunction()) != null) return buf;
+            
+
+
+            return null;
+        }
+
+        private FunctionUnit IsNextFunction()
+        {
+            List<Token> tokens = new List<Token>(Tokens.ToArray());
+            FunctionUnit func = new FunctionUnit();
+
+            if (tokens[0].Type != TokenType.Keyword_int) return null;
+            func.Return = tokens[0].Type.ToString().Replace("Keyword_", "");
+
+            if (tokens[1].Type != TokenType.Identifier) return null;
+            func.Name = tokens[1].Value;
+
+            if (tokens[2].Type != TokenType.LeftParen) return null;
+            int i = 3;
+            while (tokens[i].Type != TokenType.RightParen)
+            {
+                string type;
+                string ids;
+                if (tokens[i].Type != TokenType.Keyword_int) return null;
+                type = tokens[i].Type.ToString().Replace("Keyword_", "");
+                i++;
+                if (tokens[i].Type != TokenType.Identifier) return null;
+                ids = tokens[i].Value;
+                i++;
+                if (tokens[i].Type != TokenType.RightParen) break;
+                if (tokens[i].Type != TokenType.Comma) return null;
+                i++;
+                func.Args.Add(new DecIdenUnit(type, ids));
+            }
+
+            return null;
+        }
+
+         
        
+
         
+
         /// <summary>
         /// Parse Expression
         /// </summary>
@@ -61,57 +113,53 @@ namespace Compiler.Syntaxing
         /// <returns></returns>
         private Tree Expression(int p)
         {
-#pragma warning disable CS0168 // Переменная "node" объявлена, но ни разу не использована.
             Tree x = null, node;
-#pragma warning restore CS0168 // Переменная "node" объявлена, но ни разу не использована.
-#pragma warning disable CS0168 // Переменная "op" объявлена, но ни разу не использована.
             TokenType op;
-#pragma warning restore CS0168 // Переменная "op" объявлена, но ни разу не использована.
 
-            //switch (Current.Type)
-            //{
-            //    case TokenType.Lparen:
-            //        x = ParentExpression();
-            //        break;
-            //    case TokenType.Sub:
-            //    case TokenType.Add:
-            //        op = Current.Type;
-            //        Current = Tokens.Pop();
-            //        node = Expression(Token.DependencyByType(TokenType.Negate).precedence);
-            //        x = (op == TokenType.Sub) ? new Tree(NodeType.Negate, node, null) : node;
-            //        break;
-            //    case TokenType.Not:
-            //        Current = Tokens.Pop();
-            //        x = new Tree(NodeType.Not, Expression(Token.DependencyByType(TokenType.Not).precedence), null);
-            //        break;
-            //    case TokenType.Ident:
-            //        x = new Tree(NodeType.Ident, Current.Value);
-            //        Current = Tokens.Pop();
-            //        break;
-            //    case TokenType.Integer:
-            //        x = new Tree(NodeType.Integer, Current.Value);
-            //        Current = Tokens.Pop();
-            //        break;
-            //        //default:
-            //        //error(Type.Line, Type.Position, "Expecting a primary, found: %tokenType\n", atr[Type.Type].Value);
-            //}
+            switch (Current.Type)
+            {
+                case TokenType.LeftParen:
+                    x = ParentExpression();
+                    break;
+                case TokenType.Op_subtract:
+                case TokenType.Op_add:
+                    op = Current.Type;
+                    Current = Tokens.Pop();
+                    node = Expression(Token.DependencyByType(TokenType.Op_negate).precedence);
+                    x = (op == TokenType.Op_subtract) ? new Tree(NodeType.Negate, node, null) : node;
+                    break;
+                case TokenType.Op_not:
+                    Current = Tokens.Pop();
+                    x = new Tree(NodeType.Not, Expression(Token.DependencyByType(TokenType.Op_not).precedence), null);
+                    break;
+                case TokenType.Identifier:
+                    x = new Tree(NodeType.Ident, Current.Value);
+                    Current = Tokens.Pop();
+                    break;
+                case TokenType.Integer:
+                    x = new Tree(NodeType.Integer, Current.Value);
+                    Current = Tokens.Pop();
+                    break;
+                    //default:
+                    //error(Type.Line, Type.Position, "Expecting a primary, found: %tokenType\n", atr[Type.Type].Value);
+            }
 
-            ////todo dictionary
-            //Dependency current = Token.DependencyByType(Current.Type);
-            //while (current.is_binary && current.precedence >= p)
-            //{
-            //    Current = Tokens.Pop();
+            //todo dictionary
+            Dependency current = Token.DependencyByType(Current.Type);
+            while (current.is_binary && current.precedence >= p)
+            {
+                Current = Tokens.Pop();
 
-            //    int q = current.precedence;
-            //    if (!current.right_associative)
-            //        q++;
+                int q = current.precedence;
+                if (!current.right_associative)
+                    q++;
 
-            //    node = Expression(q);
-            //    x = new Tree(current.node_type, x, node);
+                node = Expression(q);
+                x = new Tree(current.node_type, x, node);
 
-            //    current = Token.DependencyByType(Current.Type);
+                current = Token.DependencyByType(Current.Type);
 
-            //}
+            }
 
             return x;
         }
@@ -123,85 +171,78 @@ namespace Compiler.Syntaxing
         /// <returns></returns>
         private Tree Statement()
         {
-#pragma warning disable CS0168 // Переменная "s2" объявлена, но ни разу не использована.
-#pragma warning disable CS0168 // Переменная "s" объявлена, но ни разу не использована.
-#pragma warning disable CS0168 // Переменная "v" объявлена, но ни разу не использована.
-#pragma warning disable CS0168 // Переменная "e" объявлена, но ни разу не использована.
+
             Tree tree = null, v, e, s, s2;
-#pragma warning restore CS0168 // Переменная "e" объявлена, но ни разу не использована.
-#pragma warning restore CS0168 // Переменная "v" объявлена, но ни разу не использована.
-#pragma warning restore CS0168 // Переменная "s" объявлена, но ни разу не использована.
-#pragma warning restore CS0168 // Переменная "s2" объявлена, но ни разу не использована.
 
-            //switch (Current.Type)
-            //{
-            //    case TokenType.If:
-            //        Current = Tokens.Pop();
-            //        e = ParentExpression();
-            //        s = Statement();
-            //        s2 = null;
-            //        if (Current.Type == TokenType.Else)
-            //        {
-            //            Current = Tokens.Pop();
-            //            s2 = Statement();
-            //        }
+            switch (Current.Type)
+            {
+                case TokenType.Keyword_if:
+                    Current = Tokens.Pop();
+                    e = ParentExpression();
+                    s = Statement();
+                    s2 = null;
+                    if (Current.Type == TokenType.Keyword_else)
+                    {
+                        Current = Tokens.Pop();
+                        s2 = Statement();
+                    }
 
-            //        tree = new Tree(NodeType.If, e, new Tree(NodeType.If, s, s2));
-            //        break;
-            //    case TokenType.Putc:
-            //        Current = Tokens.Pop();
-            //        e = ParentExpression();
-            //        tree = new Tree(NodeType.Prtc, e, null);
-            //        IsExpected("Putc", TokenType.Semi);
-            //        break;
-            //    case TokenType.Print: /* print '(' Expression {',' Expression} ')' */
-            //        Current = Tokens.Pop();
-            //        for (IsExpected("Print", TokenType.Lparen); ; IsExpected("Print", TokenType.Comma))
-            //        {
-            //            if (Current.Type == TokenType.String)
-            //            {
-            //                e = new Tree(NodeType.Prts, new Tree(NodeType.String, Current.Value), null);
-            //                Current = Tokens.Pop();
-            //            }
-            //            else
-            //                e = new Tree(NodeType.Prti, Expression(0), null);
+                    tree = new Tree(NodeType.If, e, new Tree(NodeType.If, s, s2));
+                    break;
+                case TokenType.Keyword_putc:
+                    Current = Tokens.Pop();
+                    e = ParentExpression();
+                    tree = new Tree(NodeType.Prtc, e, null);
+                    IsExpected("Putc", TokenType.Semicolon);
+                    break;
+                case TokenType.Keyword_print: /* print '(' Expression {',' Expression} ')' */
+                    Current = Tokens.Pop();
+                    for (IsExpected("Print", TokenType.LeftParen); ; IsExpected("Print", TokenType.Comma))
+                    {
+                        if (Current.Type == TokenType.String)
+                        {
+                            e = new Tree(NodeType.Prts, new Tree(NodeType.String, Current.Value), null);
+                            Current = Tokens.Pop();
+                        }
+                        else
+                            e = new Tree(NodeType.Prti, Expression(0), null);
 
-            //            tree = new Tree(NodeType.Sequence, tree, e);
+                        tree = new Tree(NodeType.Sequence, tree, e);
 
-            //            if (Current.Type != TokenType.Comma)
-            //                break;
-            //        }
+                        if (Current.Type != TokenType.Comma)
+                            break;
+                    }
 
-            //        IsExpected("Print", TokenType.Rparen);
-            //        IsExpected("Print", TokenType.Semi);
-            //        break;
-            //    case TokenType.Semi:
-            //        Current = Tokens.Pop();
-            //        break;
-            //    case TokenType.Ident:
-            //        v = new Tree(NodeType.Ident, Current.Value);
-            //        Current = Tokens.Pop();
-            //        IsExpected("assign", TokenType.Assign);
-            //        e = Expression(0);
-            //        tree = new Tree(NodeType.Assign, v, e);
-            //        IsExpected("assign", TokenType.Semi);
-            //        break;
-            //    case TokenType.While:
-            //        Current = Tokens.Pop();
-            //        e = ParentExpression();
-            //        s = Statement();
-            //        tree = new Tree(NodeType.While, e, s);
-            //        break;
-            //    case TokenType.Lbrace: /* {Statement} */
-            //        for (IsExpected("Lbrace", TokenType.Lbrace);
-            //            Current.Type != TokenType.Rbrace && Current.Type != TokenType.EOI;)
-            //            tree = new Tree(NodeType.Sequence, tree, Statement());
-            //        IsExpected("Lbrace", TokenType.Rbrace);
-            //        break;
-            //    case TokenType.EOI:
-            //        break;
-            //        // default(): error(Type.Line, Type.Position, "expecting start of statement, found '%tokenType'\n", atr[Type.Type].Value);
-            //}
+                    IsExpected("Print", TokenType.RightParen);
+                    IsExpected("Print", TokenType.Semicolon);
+                    break;
+                case TokenType.Semicolon:
+                    Current = Tokens.Pop();
+                    break;
+                case TokenType.Identifier:
+                    v = new Tree(NodeType.Ident, Current.Value);
+                    Current = Tokens.Pop();
+                    IsExpected("assign", TokenType.Op_assign);
+                    e = Expression(0);
+                    tree = new Tree(NodeType.Assign, v, e);
+                    IsExpected("assign", TokenType.Semicolon);
+                    break;
+                case TokenType.Keyword_while:
+                    Current = Tokens.Pop();
+                    e = ParentExpression();
+                    s = Statement();
+                    tree = new Tree(NodeType.While, e, s);
+                    break;
+                case TokenType.LeftBrace: /* {Statement} */
+                    for (IsExpected("Lbrace", TokenType.LeftBrace);
+                        Current.Type != TokenType.RightBrace && Current.Type != TokenType.End_of_input;)
+                        tree = new Tree(NodeType.Sequence, tree, Statement());
+                    IsExpected("Lbrace", TokenType.RightBrace);
+                    break;
+                case TokenType.End_of_input:
+                    break;
+                    // default(): error(Type.Line, Type.Position, "expecting start of statement, found '%tokenType'\n", atr[Type.Type].Value);
+            }
 
             return tree;
         }
@@ -213,9 +254,9 @@ namespace Compiler.Syntaxing
         /// <returns></returns>
         private Tree ParentExpression()
         {
-            //IsExpected("ParentExpression", TokenType.Lparen);
+            IsExpected("ParentExpression", TokenType.LeftParen);
             Tree t = Expression(0);
-            //IsExpected("ParentExpression", TokenType.Rparen);
+            IsExpected("ParentExpression", TokenType.RightParen);
             return t;
         }
 
@@ -235,39 +276,5 @@ namespace Compiler.Syntaxing
              
             //todo error(Type.Line, Type.Position, "%tokenType: Expecting '%tokenType', found '%tokenType'\n", msg, atr[tokenType].Value, atr[Type.Type].Value);
         }
-
-
-        /// <summary>
-        /// Parse string output from Lexer to Tokens Stack
-        /// </summary>
-        /// <param name="input">Massive</param>
-        /// <returns>Stack, where the first line is head, aka reverse input</returns>
-        private Stack<Token> StringToTokensStack(string input)
-        {
-            RegexOptions options = RegexOptions.None;
-            Regex regex = new Regex("[ ]{2,}", options);
-            string[] lines = input.Trim().Split('\n');
-            Stack<Token> tokens = new Stack<Token>(lines.Length);
-
-            for (int i = lines.Length - 1; i >= 0; i--)
-            {
-                try
-                {
-                    string[] token_parts = regex.Replace(lines[i].Trim(), " ").Split();
-                    Token token = new Token(Token.TypeByName(token_parts[2]), int.Parse(token_parts[0]), int.Parse(token_parts[1]),
-                        token_parts.Length == 4 ? token_parts[3] : "");
-
-                    Tokens.Push(token);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Problem with input Current line " + i + " ! \n" + e);
-                }
-
-            }
-            return tokens;
-        }
-
-
     }
 }

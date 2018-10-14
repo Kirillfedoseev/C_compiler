@@ -57,11 +57,14 @@
     <Compile Include="Token\TokenType.cs" />
     <Compile Include="Syntaxer\Tree.cs" />
     <Compile Include="Units\OpsUnits\BinaryOpsUnit.cs" />
+    <Compile Include="Units\FunctionUnit.cs" />
+    <Compile Include="Units\SimpleUnits\DecIdenUnit.cs" />
     <Compile Include="Units\SimpleUnits\NumUnit.cs" />
     <Compile Include="Units\SimpleUnits\IncludeUnit.cs" />
     <Compile Include="Units\SimpleUnits\IdenUnit.cs" />
     <Compile Include="Units\SimpleUnits\SimpleUnit.cs" />
     <Compile Include="Units\SimpleUnits\StringUnit.cs" />
+    <Compile Include="Units\ProgramUnit.cs" />
     <Compile Include="Units\Unit.cs" />
     <Compile Include="Units\UnitIF.cs" />
     <Compile Include="Units\UnitType.cs" />

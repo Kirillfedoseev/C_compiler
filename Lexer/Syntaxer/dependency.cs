@@ -1,4 +1,6 @@
-﻿namespace Compiler.Syntaxing
+﻿using Compiler.Units;
+
+namespace Compiler.Syntaxing
 {
         // Dependency: Ordered by Type, must remain in same order as TokenType enum
     public class Dependency

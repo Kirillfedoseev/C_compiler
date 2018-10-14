@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Compiler.Syntaxer.Units
+namespace Compiler.Units
 {
     [JsonObject]
     public abstract class Unit
@@ -14,8 +14,5 @@ namespace Compiler.Syntaxer.Units
         {
             Type = type;            
         }
-
-
-        public abstract bool CanBeConverted();
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Compiler.Syntaxing
+﻿namespace Compiler.Units
 {
 
     public enum NodeType

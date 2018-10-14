@@ -1,8 +1,9 @@
-﻿namespace Compiler.Syntaxer.Units
+﻿namespace Compiler.Units
 {
     public enum UnitType
     {
         Error,
+        program,
         include,
         num,
         String,
@@ -13,7 +14,6 @@
         for_cycle,
         while_cycle,       
         IF,
-        
         
     }
 }

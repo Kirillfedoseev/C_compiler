@@ -10,7 +10,7 @@ namespace LexerTests
     {
 
 
-        private Compiler.Lexing.Lexer _lexical;
+        private Lexer _lexical;
 
         
         public LexerTests()

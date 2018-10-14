@@ -1,5 +1,5 @@
 ﻿
-namespace Compiler.Syntaxer.Units
+namespace Compiler.Units
 {
     class UnitIF : Unit
     {
